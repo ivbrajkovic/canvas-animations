@@ -4,6 +4,8 @@ export class Circle {
     public y: number,
     public radius: number,
     public color: string,
+    public vx: number = 1,
+    public vy: number = 1,
   ) {}
 
   draw(context: CanvasRenderingContext2D) {
