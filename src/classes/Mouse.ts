@@ -3,6 +3,18 @@ import { getDistance } from "../utility";
 export class Mouse {
   constructor(private x = innerWidth / 2, private y = innerHeight / 2) {}
 
+  mouseMove = (event: MouseEvent) => {
+    this.x = event.clientX;
+    this.y = event.clientY;
+  };
+
+  startListening() {
+    addEventListener("mousemove", this.mouseMove);
+    return () => {
+      removeEventListener("mousemove", this.mouseMove);
+    };
+  }
+
   subscribeMouseMove(callback: (x: number, y: number) => void) {
     const mouseMoveCallback = this.mouseMoveCallback(callback);
     addEventListener("mousemove", mouseMoveCallback);
