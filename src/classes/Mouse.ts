@@ -1,4 +1,4 @@
-import { distance } from "../utility";
+import { getDistance } from "../utility";
 
 export class Mouse {
   constructor(private x = innerWidth / 2, private y = innerHeight / 2) {}
@@ -31,11 +31,11 @@ export class Mouse {
   }
 
   getMouseDistance(x: number, y: number) {
-    return distance(this.x, this.y, x, y);
+    return getDistance(this.x, this.y, x, y);
   }
 
   getMouseDistanceFromObject(object: { x: number; y: number }) {
-    return distance(this.x, this.y, object.x, object.y);
+    return getDistance(this.x, this.y, object.x, object.y);
   }
 
   getMouseDistanceFromObjectCenter(object: {
@@ -43,7 +43,7 @@ export class Mouse {
     y: number;
     radius: number;
   }) {
-    return distance(this.x, this.y, object.x, object.y) - object.radius;
+    return getDistance(this.x, this.y, object.x, object.y) - object.radius;
   }
 
   getMouseDistanceFromObjectEdge(object: {
@@ -51,7 +51,7 @@ export class Mouse {
     y: number;
     radius: number;
   }) {
-    return distance(this.x, this.y, object.x, object.y) + object.radius;
+    return getDistance(this.x, this.y, object.x, object.y) + object.radius;
   }
 
   getMouseDistanceFromObjectTop(object: {
@@ -59,7 +59,7 @@ export class Mouse {
     y: number;
     radius: number;
   }) {
-    return distance(this.x, this.y, object.x, object.y - object.radius);
+    return getDistance(this.x, this.y, object.x, object.y - object.radius);
   }
 
   getMouseDistanceFromObjectBottom(object: {
@@ -67,7 +67,7 @@ export class Mouse {
     y: number;
     radius: number;
   }) {
-    return distance(this.x, this.y, object.x, object.y + object.radius);
+    return getDistance(this.x, this.y, object.x, object.y + object.radius);
   }
 
   getMouseDistanceFromObjectLeft(object: {
@@ -75,7 +75,7 @@ export class Mouse {
     y: number;
     radius: number;
   }) {
-    return distance(this.x, this.y, object.x - object.radius, object.y);
+    return getDistance(this.x, this.y, object.x - object.radius, object.y);
   }
 
   getMouseDistanceFromObjectRight(object: {
@@ -83,6 +83,6 @@ export class Mouse {
     y: number;
     radius: number;
   }) {
-    return distance(this.x, this.y, object.x + object.radius, object.y);
+    return getDistance(this.x, this.y, object.x + object.radius, object.y);
   }
 }

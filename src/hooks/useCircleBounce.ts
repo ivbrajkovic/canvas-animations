@@ -4,12 +4,13 @@ import { TailEffect } from "../classes/TailEffect";
 import { randomFromRange, randomIntFromRange } from "../utility";
 
 export const useCircleBounce = (
+  numberOfBalls: number,
   contextRef: MutableRefObject<CanvasRenderingContext2D | undefined>,
 ) => {
   useEffect(() => {
     if (!contextRef.current) return;
 
-    const balls = Array.from({ length: 40 }, () => {
+    const balls = Array.from({ length: numberOfBalls }, () => {
       const radius = randomIntFromRange(15, 45);
       return new CircleBounce(
         randomIntFromRange(radius, window.innerWidth - radius),
