@@ -47,6 +47,20 @@ export class Effect<T extends Updatable> {
     return this.stop;
   };
 
+  startDefault = () => {
+    this.isStarted = true;
+    const animate = () => {
+      if (!this.isStarted) return;
+      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+      for (let i = 0; i < this.objects.length; i++) {
+        this.objects[i].update(this.ctx);
+      }
+      requestAnimationFrame(this.startDefault);
+    };
+    requestAnimationFrame(animate);
+    return this.stop;
+  };
+
   startFps = (fps = 30) => {
     const nextFrameTime = 1000 / fps;
     let lastTime = 0;
@@ -64,20 +78,6 @@ export class Effect<T extends Updatable> {
         timer = 0;
       }
       requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
-    return this.stop;
-  };
-
-  startDefault = () => {
-    this.isStarted = true;
-    const animate = () => {
-      if (!this.isStarted) return;
-      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-      for (let i = 0; i < this.objects.length; i++) {
-        this.objects[i].update(this.ctx);
-      }
-      requestAnimationFrame(this.startDefault);
     };
     requestAnimationFrame(animate);
     return this.stop;
