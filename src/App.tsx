@@ -1,17 +1,7 @@
-import { MutableRefObject, useEffect, useReducer, useRef } from "react";
-import { Circle } from "./classes/Circle";
-import { CircleBounce } from "./classes/CircleBounce";
-import { Effect } from "./classes/Effect";
-import { Mouse } from "./classes/Mouse";
-import { TailEffect } from "./classes/TailEffect";
-import { useTailEffect } from "./hooks/useBallTrail";
 import { useCanvas } from "./hooks/useCanvas";
-import { useCircleBounce } from "./hooks/useCircleBounce";
-import { useGravityBall } from "./hooks/useGravityBall";
-import { useSimpleCollision } from "./useSimpleCollision";
-import { useCircleOutline } from "./hooks/useCircleOutline";
-import { useRectangleCollision } from "./hooks/useRectangleCollision";
-import { useCircularMotion } from "./hooks/useCircularMotion";
+import { useFireworks } from "./hooks/useFireworks";
+import { useParticlesTunnel } from "./hooks/useParticlesTunnel";
+import { useSkyStars } from "./hooks/useSkyStars";
 
 function App() {
   const { canvasRef, contextRef } = useCanvas();
@@ -22,7 +12,11 @@ function App() {
   // useSimpleCollision(contextRef);
   // useCircleOutline(contextRef);
   // useRectangleCollision(contextRef);
-  useCircularMotion(contextRef);
+  // useCircularMotion(contextRef);
+  // useWaveAnimation(contextRef);
+  // useFireworks(contextRef);
+  // useParticlesTunnel(contextRef);
+  useSkyStars(contextRef);
 
   return <canvas ref={canvasRef}></canvas>;
 }
