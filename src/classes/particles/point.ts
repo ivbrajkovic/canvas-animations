@@ -7,9 +7,29 @@ const MAX_DENSITY = 30;
 const DEFAULT_COLOR = 'rgba(255,255,255)';
 
 export class Particle {
-  constructor(w, h, size = MAX_SIZE, maxMove = MAX_MOVE) {
-    this.x = Math.random() * w;
-    this.y = Math.random() * h;
+  public x: number;
+  public y: number;
+
+  private baseX: number;
+  private baseY: number;
+  private size: number;
+  private density: number;
+  private maxMove: number;
+  private directionX: number;
+  private directionY: number;
+  private countMoveX: number;
+  private countMoveY: number;
+  private directionAngle: number;
+  private vector: { x: number; y: number };
+
+  constructor(
+    width: number,
+    height: number,
+    size = MAX_SIZE,
+    maxMove = MAX_MOVE,
+  ) {
+    this.x = Math.random() * width;
+    this.y = Math.random() * height;
     this.baseX = this.x;
     this.baseY = this.y;
     this.size = Math.random() * (size || MAX_SIZE) + 1;

@@ -1,42 +1,43 @@
 import merge from 'lodash/fp/merge';
 import debounce from 'lodash/fp/debounce';
-import { Pointer } from './pointer';
+import { Mouse } from './mouse';
 import { Particle } from './point';
 import {
   PartialParticlesOptions,
   ParticlesOptions,
 } from 'classes/particles/types';
+import { Grid } from 'classes/particles/grid';
+import { QuadTree, Rectangle } from 'classes/particles/quad-tree';
 
-const LINE_WIDTH = 2;
-const PARTICLE_COUNT_FACTOR = 12;
-const CONNECT_DISTANCE = 120;
 const DEFAULT_CANVAS_WIDTH = 800;
 const DEFAULT_CANVAS_HEIGHT = 600;
 
 const defaults: ParticlesOptions = {
   fps: { show: false, element: null },
   color: {
-    opacity: 0,
-    maxOpacity: 1,
-    minOpacity: 0,
+    opacity: 1,
     particle: { r: 255, g: 255, b: 255 },
     connection: { r: 255, g: 255, b: 255 },
   },
-  connectionDistance: CONNECT_DISTANCE,
-  lineWidth: LINE_WIDTH,
-  particleCountFactor: PARTICLE_COUNT_FACTOR,
+  connectionDistance: 120,
+  lineWidth: 1,
+  particleCountFactor: 12,
   particleCount: null,
 };
 
 export class Particles {
-  private running: boolean;
+  private running = false;
+  private raf: number | null = null;
+  private frameCount = 0;
+  private previousFpsTime = performance.now();
+  private particles: Particle[] = [];
+  private options = defaults;
+  private mouse: Mouse = new Mouse();
   private ctx: CanvasRenderingContext2D;
-  private raf: number | null;
-  private previousSeconds: number;
-  private previousFpsTimestamp: number;
-  private particles: Particle[];
-  private pointer: Pointer;
-  private options: ParticlesOptions;
+
+  // Grid and QuadTree
+  private grid: Grid;
+  private quadTreeCapacity: number = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -46,97 +47,205 @@ export class Particles {
     if (!context) throw new Error('Canvas context not found');
 
     this.ctx = context;
-    this.raf = null;
-    this.running = false;
-    this.previousSeconds = 0;
-    this.previousFpsTimestamp = 0;
-    this.particles = [];
-    this.pointer = new Pointer();
     this.options = merge(defaults, options);
+
+    // Grid and QuadTree
+    this.grid = new Grid(this.options.connectionDistance);
+    this.quadTreeCapacity = 4; // Capacity for each QuadTree quadrant
   }
 
-  private tick = (time: number) => {
-    // Stop animation if not running and opacity is 0
-    if (!this.running && this.options.color.opacity <= 0) {
-      this.raf = null;
-      return;
-    }
+  private tick = () => {
+    if (!this.running) return;
 
-    const seconds = time * 0.001;
-    const elapsedTime = seconds - this.previousSeconds;
-    this.previousSeconds = seconds;
-
-    this.fadeAnimation(elapsedTime);
     this.animate();
-
-    if (this.options.fps?.show)
-      this.updateFPSCounter(elapsedTime, this.options.fps.element);
+    if (this.options.fps?.show) this.updateFPSCounter(this.options.fps.element);
 
     this.raf = requestAnimationFrame(this.tick);
   };
 
-  private updateFPSCounter = (
-    elapsedTime: number,
-    element: HTMLElement,
-    interval = 1000,
-  ) => {
-    const now = Date.now();
-    if (now - this.previousFpsTimestamp < interval) return;
-    element.innerText = `FPS: ${(1 / elapsedTime).toFixed(1)}`;
-    this.previousFpsTimestamp = now;
+  private updateFPSCounter = (element: HTMLElement, interval = 1000) => {
+    const now = performance.now();
+    this.frameCount++; // Increment frame count
+
+    if (now - this.previousFpsTime < interval) return;
+
+    const delta = (now - this.previousFpsTime) / 1000; // Time elapsed in seconds
+    const fps = this.frameCount / delta; // Average FPS over the elapsed time
+    element.innerText = `FPS: ${fps.toFixed(1)}`;
+
+    // Reset for the next interval
+    this.previousFpsTime = now;
+    this.frameCount = 0;
   };
 
-  fadeAnimation = (elapsedTime: number) => {
-    if (elapsedTime > 0.2) elapsedTime = 0.016; // Smooth fade on restart animation
-
-    const { opacity, maxOpacity, minOpacity } = this.options.color;
-    if (this.running && opacity < maxOpacity) {
-      this.options.color.opacity = Math.min(opacity + elapsedTime, maxOpacity);
-    } else if (!this.running && opacity > 0) {
-      this.options.color.opacity = Math.max(opacity - elapsedTime, minOpacity);
+  private updateParticles = () => {
+    for (let i = 0; i < this.particles.length; i++) {
+      const point = this.particles[i];
+      point.update(this.mouse); // Update particle based on mouse interaction
+      point.move(this.canvas); // Move particle based on its velocity and position
     }
   };
 
   private animate = () => {
+    // TODO: Maybe unroll the functions to avoid the overhead of function calls
+
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawScene();
-    this.pointer.reduceRadius(2);
+    this.updateParticles();
+    this.drawSceneNestedLoop();
+    // this.drawSceneGrid();
+    // this.drawSceneQuadTree();
+    this.mouse.reduceRadius(2);
   };
 
-  private drawScene() {
-    const { connectionDistance: distanceThreshold, color } = this.options;
-    let dx, dy, distance, opacityValue;
+  private drawSceneNestedLoop = () => {
+    const color = this.options.color;
+    const connectionDistance = this.options.connectionDistance;
+    let dx: number,
+      dy: number,
+      distanceSquared: number,
+      connectionDistanceSquared: number,
+      opacityValue: number;
 
     for (let i = 0; i < this.particles.length; i++) {
-      // Connect points
-      for (let j = i; j < this.particles.length; j++) {
-        dx = this.particles[i].x - this.particles[j].x;
-        dy = this.particles[i].y - this.particles[j].y;
-        // distance = Math.hypot(dx, dy);
-        distance = Math.sqrt(dx * dx + dy * dy); // 2 time faster
+      const particleA = this.particles[i];
 
-        // In threshold distance
-        if (distance < distanceThreshold) {
+      for (let j = i; j < this.particles.length; j++) {
+        const particleB = this.particles[j];
+        dx = particleA.x - particleB.x;
+        dy = particleA.y - particleB.y;
+        distanceSquared = dx * dx + dy * dy;
+        connectionDistanceSquared = connectionDistance ** 2;
+
+        if (distanceSquared < connectionDistanceSquared) {
           opacityValue =
-            (1 - distance / distanceThreshold) * color.opacity || 0;
+            (1 - Math.pow(distanceSquared / connectionDistanceSquared, 0.5)) *
+            color.opacity;
           this.ctx.strokeStyle = `rgba(${color.connection.r},${color.connection.g},${color.connection.b},${opacityValue})`;
-          this.ctx.lineWidth = 2;
+          this.ctx.lineWidth = this.options.lineWidth;
           this.ctx.beginPath();
-          this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
-          this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
+          this.ctx.moveTo(particleA.x, particleA.y);
+          this.ctx.lineTo(particleB.x, particleB.y);
+          this.ctx.stroke();
+        }
+      }
+
+      particleA.draw(
+        this.ctx,
+        `rgba(${color.particle.r},${color.particle.g},${color.particle.b},${color.opacity})`,
+      );
+    }
+  };
+
+  private drawSceneGrid = () => {
+    this.grid.clear();
+    this.grid.insertParticles(this.particles);
+
+    const color = this.options.color;
+    const connectionDistance = this.options.connectionDistance;
+    let dx: number,
+      dy: number,
+      distanceSquared: number,
+      connectionDistanceSquared: number,
+      opacityValue: number;
+
+    for (let i = 0; i < this.particles.length; i++) {
+      const particleA = this.particles[i];
+      const nearbyParticles = this.grid.getNearbyParticles(particleA);
+
+      for (let j = 0; j < nearbyParticles.length; j++) {
+        const particleB = nearbyParticles[j];
+        if (particleA === particleB) continue; // Skip self-comparison
+
+        // Calculate squared distance to avoid expensive sqrt()
+        dx = particleA.x - particleB.x;
+        dy = particleA.y - particleB.y;
+        distanceSquared = dx * dx + dy * dy;
+        connectionDistanceSquared = connectionDistance ** 2;
+
+        if (distanceSquared < connectionDistanceSquared) {
+          opacityValue =
+            (1 - Math.pow(distanceSquared / connectionDistanceSquared, 0.5)) *
+            color.opacity;
+          this.ctx.strokeStyle = `rgba(${color.connection.r},${color.connection.g},${color.connection.b},${opacityValue})`;
+          this.ctx.lineWidth = this.options.lineWidth;
+          this.ctx.beginPath();
+          this.ctx.moveTo(particleA.x, particleA.y);
+          this.ctx.lineTo(particleB.x, particleB.y);
           this.ctx.stroke();
         }
       }
 
       // Draw points
-      this.particles[i].draw(
+      particleA.draw(
         this.ctx,
         `rgba(${color.particle.r},${color.particle.g},${color.particle.b},${color.opacity})`,
       );
-      this.particles[i].update(this.pointer);
-      this.particles[i].move(this.canvas);
     }
-  }
+  };
+
+  private drawSceneQuadTree = () => {
+    const boundary = new Rectangle(
+      this.canvas.width / 2,
+      this.canvas.height / 2,
+      this.canvas.width / 2,
+      this.canvas.height / 2,
+    );
+
+    const quadTree = new QuadTree(boundary, this.quadTreeCapacity);
+    for (let i = 0; i < this.particles.length; i++)
+      quadTree.insert(this.particles[i]);
+
+    // quadTree.draw(this.ctx);
+    const color = this.options.color;
+    const connectionDistance = this.options.connectionDistance;
+    let dx: number,
+      dy: number,
+      distanceSquared: number,
+      connectionDistanceSquared: number,
+      opacityValue: number;
+
+    for (let i = 0; i < this.particles.length; i++) {
+      const particleA = this.particles[i];
+
+      const nearbyParticles = quadTree.query(
+        new Rectangle(
+          particleA.x,
+          particleA.y,
+          connectionDistance,
+          connectionDistance,
+        ),
+      );
+
+      for (let j = 0; j < nearbyParticles.length; j++) {
+        const particleB = nearbyParticles[j];
+        if (particleA === particleB) continue; // Skip self-comparison
+
+        // Calculate squared distance to avoid expensive sqrt()
+        dx = particleA.x - particleB.x;
+        dy = particleA.y - particleB.y;
+        distanceSquared = dx * dx + dy * dy;
+        connectionDistanceSquared = this.options.connectionDistance ** 2;
+
+        if (distanceSquared < connectionDistanceSquared) {
+          opacityValue =
+            (1 - Math.pow(distanceSquared / connectionDistanceSquared, 0.5)) *
+            color.opacity;
+          this.ctx.strokeStyle = `rgba(${color.connection.r},${color.connection.g},${color.connection.b},${opacityValue})`;
+          this.ctx.lineWidth = this.options.lineWidth;
+          this.ctx.beginPath();
+          this.ctx.moveTo(particleA.x, particleA.y);
+          this.ctx.lineTo(particleB.x, particleB.y);
+          this.ctx.stroke();
+        }
+      }
+
+      // Draw points
+      particleA.draw(
+        this.ctx,
+        `rgba(${color.particle.r},${color.particle.g},${color.particle.b},${color.opacity})`,
+      );
+    }
+  };
 
   private resizeCanvasToFitParent = () => {
     const pixelRatio = window.devicePixelRatio;
@@ -166,12 +275,17 @@ export class Particles {
 
   onResize = debounce(250, this.init);
   onMouseMove = (e: MouseEvent) => {
-    this.pointer.x = e.offsetX;
-    this.pointer.y = e.offsetY;
-    this.pointer.increaseRadius(10);
+    this.mouse.x = e.offsetX;
+    this.mouse.y = e.offsetY;
+    this.mouse.increaseRadius(10);
   };
 
-  stop = () => (this.running = false);
+  stop = () => {
+    if (!this.running) return;
+    this.running = false;
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this.raf = null;
+  };
   start = () => {
     this.running = true;
     this.raf = requestAnimationFrame(this.tick);

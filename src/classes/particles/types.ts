@@ -5,8 +5,6 @@ export type OptionalDeep<T> = {
 type BaseParticleOptions = {
   color: {
     opacity: number;
-    maxOpacity: number;
-    minOpacity: number;
     particle: { r: number; g: number; b: number };
     connection: { r: number; g: number; b: number };
   };

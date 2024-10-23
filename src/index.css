@@ -21,13 +21,12 @@
 }
 
 body {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+  padding-bottom: 3000px;
 }
 
 #root {
-  flex: 1;
+  min-height: 100vh;
+  height: 100%;
 }
 
 canvas {

@@ -1,4 +1,4 @@
-export class Pointer {
+export class Mouse {
   constructor(
     public x: number | null = null,
     public y: number | null = null,
