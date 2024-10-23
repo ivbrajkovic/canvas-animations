@@ -1,10 +1,19 @@
-import { useCanvas } from "./hooks/useCanvas";
-import { useFireworks } from "./hooks/useFireworks";
-import { useParticlesTunnel } from "./hooks/useParticlesTunnel";
-import { useSkyStars } from "./hooks/useSkyStars";
+import { useGravityBall } from 'hooks/useGravityBall';
+import { useCanvas } from './hooks/useCanvas';
+import { useFireworks } from './hooks/useFireworks';
+import { useParticlesTunnel } from './hooks/useParticlesTunnel';
+import { useSkyStars } from './hooks/useSkyStars';
+import { useCircleBounce } from 'hooks/useCircleBounce';
+import { useTailEffect } from 'hooks/useBallTrail';
+import { useSimpleCollision } from 'useSimpleCollision';
+import { useCircleOutline } from 'hooks/useCircleOutline';
+import { useRectangleCollision } from 'hooks/useRectangleCollision';
+import { useCircularMotion } from 'hooks/useCircularMotion';
+import { useWaveAnimation } from 'hooks/useWaveAnimation';
+import { useParticles } from 'hooks/useParticles';
 
 function App() {
-  const { canvasRef, contextRef } = useCanvas();
+  // const { canvasRef, contextRef } = useCanvas();
 
   // useGravityBall(contextRef);
   // useCircleBounce(40, contextRef);
@@ -16,7 +25,8 @@ function App() {
   // useWaveAnimation(contextRef);
   // useFireworks(contextRef);
   // useParticlesTunnel(contextRef);
-  useSkyStars(contextRef);
+  // useSkyStars(contextRef);
+  const { canvasRef } = useParticles();
 
   return <canvas ref={canvasRef}></canvas>;
 }

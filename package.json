@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dat.gui": "^0.7.9",
+    "lodash": "^4.17.21",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "dat.gui": "^0.7.9"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.9",
+    "@types/lodash": "^4.17.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

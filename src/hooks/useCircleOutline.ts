@@ -1,11 +1,11 @@
-import { MutableRefObject, useEffect, useRef } from "react";
-import { Circle } from "../classes/Circle";
-import { CircleOutline } from "../classes/CircleOutline";
-import { getDistance, randomFromRange, randomIntFromRange } from "../utility";
-import { Mouse } from "../classes/Mouse";
-import { Effect } from "../classes/Effect";
+import { MutableRefObject, useEffect, useRef } from 'react';
+import { Circle } from '../classes/Circle';
+import { CircleOutline } from '../classes/CircleOutline';
+import { getDistance, randomFromRange, randomIntFromRange } from '../utility';
+import { Mouse } from '../classes/Mouse';
+import { Effect } from '../classes/Effect';
 
-const PARTICLE_COUNT = 100;
+const PARTICLE_COUNT = 80;
 const MIN_RADIUS = 25;
 const MAX_RADIUS = 25;
 const MIN_MASS = 1;
@@ -71,7 +71,7 @@ export const useCircleOutline = (
     const effect = new Effect(contextRef.current, particlesRef.current);
 
     effect.animation = (ctx) => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
