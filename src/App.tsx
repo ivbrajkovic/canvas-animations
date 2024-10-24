@@ -10,7 +10,8 @@ import { useCircleOutline } from 'hooks/useCircleOutline';
 import { useRectangleCollision } from 'hooks/useRectangleCollision';
 import { useCircularMotion } from 'hooks/useCircularMotion';
 import { useWaveAnimation } from 'hooks/useWaveAnimation';
-import { useParticles } from 'hooks/useParticles';
+import { useParticles } from 'hooks/use-particles';
+import { useParticlesWebGL } from 'hooks/use-particles-webgl';
 
 function App() {
   // const { canvasRef, contextRef } = useCanvas();
@@ -26,7 +27,8 @@ function App() {
   // useFireworks(contextRef);
   // useParticlesTunnel(contextRef);
   // useSkyStars(contextRef);
-  const { canvasRef } = useParticles();
+  // const { canvasRef } = useParticles();
+  const { canvasRef } = useParticlesWebGL();
 
   return <canvas ref={canvasRef}></canvas>;
 }

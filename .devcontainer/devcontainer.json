@@ -29,7 +29,9 @@
         "WallabyJs.console-ninja",
         "streetsidesoftware.code-spell-checker",
         "formulahendry.auto-rename-tag",
-        "huibizhang.codesnap-plus"
+        "huibizhang.codesnap-plus",
+        "dtoplak.vscode-glsllint",
+        "raczzalan.webgl-glsl-editor"
       ]
     }
   },

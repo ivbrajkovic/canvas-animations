@@ -17,7 +17,7 @@ export class Mouse {
     this.radius = newRadius > this.maxRadius ? this.maxRadius : newRadius;
   }
 
-  reduceRadius(value = -1) {
+  reduceRadius(value = 1) {
     const newRadius = this.radius - value;
     this.radius = newRadius < this.minRadius ? this.minRadius : newRadius;
   }

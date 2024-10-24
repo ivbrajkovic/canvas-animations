@@ -6,6 +6,8 @@ import {
   PartialParticlesOptions,
   ParticlesOptions,
 } from 'classes/particles/types';
+import { Grid } from 'classes/particles/grid';
+import { QuadTree, Rectangle } from 'classes/particles/quad-tree';
 
 const DEFAULT_CANVAS_WIDTH = 800;
 const DEFAULT_CANVAS_HEIGHT = 600;
@@ -33,6 +35,10 @@ export class Particles {
   private mouse: Mouse = new Mouse();
   private ctx: CanvasRenderingContext2D;
 
+  // Grid and QuadTree
+  private grid: Grid;
+  private quadTreeCapacity: number = 0;
+
   constructor(
     private canvas: HTMLCanvasElement,
     options: PartialParticlesOptions = {},
@@ -42,6 +48,10 @@ export class Particles {
 
     this.ctx = context;
     this.options = merge(defaults, options);
+
+    // Grid and QuadTree
+    this.grid = new Grid(this.options.connectionDistance);
+    this.quadTreeCapacity = 4; // Capacity for each QuadTree quadrant
   }
 
   private tick = () => {
@@ -77,11 +87,14 @@ export class Particles {
   };
 
   private animate = () => {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     // TODO: Maybe unroll the functions to avoid the overhead of function calls
+
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.updateParticles();
     this.drawSceneNestedLoop();
-    this.mouse.reduceRadius();
+    // this.drawSceneGrid();
+    // this.drawSceneQuadTree();
+    this.mouse.reduceRadius(2);
   };
 
   private drawSceneNestedLoop = () => {
@@ -116,6 +129,117 @@ export class Particles {
         }
       }
 
+      particleA.draw(
+        this.ctx,
+        `rgba(${color.particle.r},${color.particle.g},${color.particle.b},${color.opacity})`,
+      );
+    }
+  };
+
+  private drawSceneGrid = () => {
+    this.grid.clear();
+    this.grid.insertParticles(this.particles);
+
+    const color = this.options.color;
+    const connectionDistance = this.options.connectionDistance;
+    let dx: number,
+      dy: number,
+      distanceSquared: number,
+      connectionDistanceSquared: number,
+      opacityValue: number;
+
+    for (let i = 0; i < this.particles.length; i++) {
+      const particleA = this.particles[i];
+      const nearbyParticles = this.grid.getNearbyParticles(particleA);
+
+      for (let j = 0; j < nearbyParticles.length; j++) {
+        const particleB = nearbyParticles[j];
+        if (particleA === particleB) continue; // Skip self-comparison
+
+        // Calculate squared distance to avoid expensive sqrt()
+        dx = particleA.x - particleB.x;
+        dy = particleA.y - particleB.y;
+        distanceSquared = dx * dx + dy * dy;
+        connectionDistanceSquared = connectionDistance ** 2;
+
+        if (distanceSquared < connectionDistanceSquared) {
+          opacityValue =
+            (1 - Math.pow(distanceSquared / connectionDistanceSquared, 0.5)) *
+            color.opacity;
+          this.ctx.strokeStyle = `rgba(${color.connection.r},${color.connection.g},${color.connection.b},${opacityValue})`;
+          this.ctx.lineWidth = this.options.lineWidth;
+          this.ctx.beginPath();
+          this.ctx.moveTo(particleA.x, particleA.y);
+          this.ctx.lineTo(particleB.x, particleB.y);
+          this.ctx.stroke();
+        }
+      }
+
+      // Draw points
+      particleA.draw(
+        this.ctx,
+        `rgba(${color.particle.r},${color.particle.g},${color.particle.b},${color.opacity})`,
+      );
+    }
+  };
+
+  private drawSceneQuadTree = () => {
+    const boundary = new Rectangle(
+      this.canvas.width / 2,
+      this.canvas.height / 2,
+      this.canvas.width / 2,
+      this.canvas.height / 2,
+    );
+
+    const quadTree = new QuadTree(boundary, this.quadTreeCapacity);
+    for (let i = 0; i < this.particles.length; i++)
+      quadTree.insert(this.particles[i]);
+
+    // quadTree.draw(this.ctx);
+    const color = this.options.color;
+    const connectionDistance = this.options.connectionDistance;
+    let dx: number,
+      dy: number,
+      distanceSquared: number,
+      connectionDistanceSquared: number,
+      opacityValue: number;
+
+    for (let i = 0; i < this.particles.length; i++) {
+      const particleA = this.particles[i];
+
+      const nearbyParticles = quadTree.query(
+        new Rectangle(
+          particleA.x,
+          particleA.y,
+          connectionDistance,
+          connectionDistance,
+        ),
+      );
+
+      for (let j = 0; j < nearbyParticles.length; j++) {
+        const particleB = nearbyParticles[j];
+        if (particleA === particleB) continue; // Skip self-comparison
+
+        // Calculate squared distance to avoid expensive sqrt()
+        dx = particleA.x - particleB.x;
+        dy = particleA.y - particleB.y;
+        distanceSquared = dx * dx + dy * dy;
+        connectionDistanceSquared = this.options.connectionDistance ** 2;
+
+        if (distanceSquared < connectionDistanceSquared) {
+          opacityValue =
+            (1 - Math.pow(distanceSquared / connectionDistanceSquared, 0.5)) *
+            color.opacity;
+          this.ctx.strokeStyle = `rgba(${color.connection.r},${color.connection.g},${color.connection.b},${opacityValue})`;
+          this.ctx.lineWidth = this.options.lineWidth;
+          this.ctx.beginPath();
+          this.ctx.moveTo(particleA.x, particleA.y);
+          this.ctx.lineTo(particleB.x, particleB.y);
+          this.ctx.stroke();
+        }
+      }
+
+      // Draw points
       particleA.draw(
         this.ctx,
         `rgba(${color.particle.r},${color.particle.g},${color.particle.b},${color.opacity})`,
