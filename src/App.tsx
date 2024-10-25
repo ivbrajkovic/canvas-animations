@@ -12,6 +12,7 @@ import { useCircularMotion } from 'hooks/useCircularMotion';
 import { useWaveAnimation } from 'hooks/useWaveAnimation';
 import { useParticles } from 'hooks/use-particles';
 import { useParticlesWebGL } from 'hooks/use-particles-webgl';
+import { useParticlesWebGLForce } from 'hooks/use-particles-webgl';
 
 function App() {
   // const { canvasRef, contextRef } = useCanvas();
@@ -28,7 +29,8 @@ function App() {
   // useParticlesTunnel(contextRef);
   // useSkyStars(contextRef);
   // const { canvasRef } = useParticles();
-  const { canvasRef } = useParticlesWebGL();
+  // const { canvasRef } = useParticlesWebGL();
+  const { canvasRef } = useParticlesWebGLForce();
 
   return <canvas ref={canvasRef}></canvas>;
 }
