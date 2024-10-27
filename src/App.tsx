@@ -11,8 +11,9 @@ import { useRectangleCollision } from 'hooks/useRectangleCollision';
 import { useCircularMotion } from 'hooks/useCircularMotion';
 import { useWaveAnimation } from 'hooks/useWaveAnimation';
 import { useParticles } from 'hooks/use-particles';
-import { useParticlesWebGL } from 'hooks/use-particles-webgl';
-import { useParticlesWebGLForce } from 'hooks/use-particles-webgl';
+import { useParticlesWebGL } from 'webgl/particles/use-particles-webgl';
+import { useParticlesWebGLForce } from 'webgl/particles/use-particles-webgl';
+import { useCube } from 'webgl/cube/use-cube';
 
 function App() {
   // const { canvasRef, contextRef } = useCanvas();
@@ -30,7 +31,8 @@ function App() {
   // useSkyStars(contextRef);
   // const { canvasRef } = useParticles();
   // const { canvasRef } = useParticlesWebGL();
-  const { canvasRef } = useParticlesWebGLForce();
+  // const { canvasRef } = useParticlesWebGLForce();
+  const { canvasRef } = useCube();
 
   return <canvas ref={canvasRef}></canvas>;
 }

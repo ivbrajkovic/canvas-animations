@@ -1,10 +1,10 @@
-import { compileShader, createProgram } from 'classes/particles-webgl/utility';
+import { compileShader, createProgram } from 'webgl/particles/utility';
 import { useEffect, useRef } from 'react';
 
-import vertex from '../classes/particles-webgl/vertex.glsl?raw';
-import fragment from '../classes/particles-webgl/fragment.glsl?raw';
-import vertexForce from '../classes/particles-webgl/vertex-force.glsl?raw';
-import fragmentForce from '../classes/particles-webgl/fragment-force.glsl?raw';
+import vertex from './vertex.glsl?raw';
+import fragment from './fragment.glsl?raw';
+import vertexForce from './vertex-force.glsl?raw';
+import fragmentForce from './fragment-force.glsl?raw';
 
 // Particle render shaders
 const vertexRender = `#version 300 es
