@@ -293,17 +293,7 @@ export const useParticlesWebGLForce = () => {
 
     let newParticleTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, newParticleTexture);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA32F,
-      NUM_PARTICLES,
-      1,
-      0,
-      gl.RGBA,
-      gl.FLOAT,
-      null,
-    );
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, NUM_PARTICLES, 1, 0, gl.RGBA, gl.FLOAT, null);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
@@ -311,14 +301,8 @@ export const useParticlesWebGLForce = () => {
 
     // Uniforms ---------------------------------------------------------
     const uNumParticlesLocation = gl.getUniformLocation(program, 'u_numParticles');
-    const uCollisionRadiusLocation = gl.getUniformLocation(
-      program,
-      'u_collisionRadius',
-    );
-    const uRepulsionStrengthLocation = gl.getUniformLocation(
-      program,
-      'u_repulsionStrength',
-    );
+    const uCollisionRadiusLocation = gl.getUniformLocation(program, 'u_collisionRadius');
+    const uRepulsionStrengthLocation = gl.getUniformLocation(program, 'u_repulsionStrength');
     const uParticleDataLocation = gl.getUniformLocation(program, 'u_particleData');
     const uParticleSizeLocation = gl.getUniformLocation(program, 'u_particleSize');
     const uDeltaTimeLocation = gl.getUniformLocation(program, 'u_deltaTime');
@@ -350,11 +334,7 @@ export const useParticlesWebGLForce = () => {
 
     // Compile the render shaders and create the render program
     const vertexShaderRender = compileShader(gl.VERTEX_SHADER, vertexRender, gl);
-    const fragmentShaderRender = compileShader(
-      gl.FRAGMENT_SHADER,
-      fragmentRender,
-      gl,
-    );
+    const fragmentShaderRender = compileShader(gl.FRAGMENT_SHADER, fragmentRender, gl);
     const renderProgram = createProgram(vertexShaderRender, fragmentShaderRender, gl);
 
     // Set up uniforms for the render shader program
@@ -381,10 +361,7 @@ export const useParticlesWebGLForce = () => {
     gl.bindBuffer(gl.ARRAY_BUFFER, particleIndexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, particleIndices, gl.STATIC_DRAW);
 
-    const aParticleIndexLocation = gl.getAttribLocation(
-      renderProgram,
-      'a_particleIndex',
-    );
+    const aParticleIndexLocation = gl.getAttribLocation(renderProgram, 'a_particleIndex');
     gl.enableVertexAttribArray(aParticleIndexLocation);
     gl.vertexAttribPointer(aParticleIndexLocation, 1, gl.FLOAT, false, 0, 0);
 

@@ -14,6 +14,7 @@ import { useParticles } from 'hooks/use-particles';
 import { useParticlesWebGL } from 'webgl/particles/use-particles-webgl';
 import { useParticlesWebGLForce } from 'webgl/particles/use-particles-webgl';
 import { useCube } from 'webgl/cube/use-cube';
+import { useParticleNew } from 'webgl/particle-new/use-particle-new';
 
 function App() {
   // const { canvasRef, contextRef } = useCanvas();
@@ -32,7 +33,8 @@ function App() {
   // const { canvasRef } = useParticles();
   // const { canvasRef } = useParticlesWebGL();
   // const { canvasRef } = useParticlesWebGLForce();
-  const { canvasRef } = useCube();
+  // const { canvasRef } = useCube();
+  const { canvasRef } = useParticleNew();
 
   return <canvas ref={canvasRef}></canvas>;
 }
