@@ -225,7 +225,7 @@ export const useParticleNew = () => {
         updatePoints(deltaTime);
         drawPoints();
 
-        raf = requestAnimationFrame(tick);
+        // raf = requestAnimationFrame(tick);
         return () => {
           cancelAnimationFrame(raf);
         };
