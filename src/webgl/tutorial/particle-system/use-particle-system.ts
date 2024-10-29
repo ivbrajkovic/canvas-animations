@@ -30,32 +30,56 @@ export const useParticleSystem = () => {
     gl.useProgram(program);
 
     const COUNT = 1000;
+    const initialData = new Float32Array(COUNT * 2).map((_, i) => i);
+    const aInput1 = gl.getAttribLocation(program, 'a_input1');
+    const aInput2 = gl.getAttribLocation(program, 'a_input2');
 
+    const vao1 = gl.createVertexArray();
     const buffer1 = gl.createBuffer();
+    gl.bindVertexArray(vao1);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer1);
     gl.bufferData(gl.ARRAY_BUFFER, COUNT * 4 * 2, gl.DYNAMIC_READ);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, initialData);
+    gl.vertexAttribPointer(aInput1, 1, gl.FLOAT, false, 8, 0);
+    gl.vertexAttribPointer(aInput2, 1, gl.FLOAT, false, 8, 4);
+    gl.enableVertexAttribArray(aInput1);
+    gl.enableVertexAttribArray(aInput2);
 
-    // const buffer2 = gl.createBuffer();
-    // gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
-    // gl.bufferData(gl.ARRAY_BUFFER, COUNT * 4, gl.DYNAMIC_READ);
+    const vao2 = gl.createVertexArray();
+    const buffer2 = gl.createBuffer();
+    gl.bindVertexArray(vao2);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
+    gl.bufferData(gl.ARRAY_BUFFER, COUNT * 4 * 2, gl.DYNAMIC_READ);
+    gl.vertexAttribPointer(aInput1, 1, gl.FLOAT, false, 8, 0);
+    gl.vertexAttribPointer(aInput2, 1, gl.FLOAT, false, 8, 4);
+    gl.enableVertexAttribArray(aInput1);
+    gl.enableVertexAttribArray(aInput2);
 
+    gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     gl.enable(gl.RASTERIZER_DISCARD);
 
-    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, buffer1);
-    // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, buffer2);
+    for (let i = 0; i < 100; i++) {
+      const [vao, buffer] = i % 2 === 0 ? [vao1, buffer2] : [vao2, buffer1];
+      gl.bindVertexArray(vao);
+      gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, buffer);
+      gl.beginTransformFeedback(gl.POINTS);
+      gl.drawArrays(gl.POINTS, 0, COUNT);
+      gl.endTransformFeedback();
+    }
 
-    gl.beginTransformFeedback(gl.POINTS);
-    gl.drawArrays(gl.POINTS, 0, COUNT);
-    gl.endTransformFeedback();
+    // Cleanup --------------------------------------------------------------
 
     gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
     // gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
 
     gl.disable(gl.RASTERIZER_DISCARD);
 
-    readBufferFromGPU(gl, buffer1, COUNT, console.log);
+    // Read buffer from GPU -------------------------------------------------
+
+    readBufferFromGPU(gl, buffer1, COUNT * 2, console.log);
+    readBufferFromGPU(gl, buffer2, COUNT * 2, console.log);
 
     // gl.clearColor(0, 0, 0, 1);
     // const draw = () => {
